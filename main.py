@@ -2,6 +2,11 @@ import pygame
 from collections import deque
 import random
 
+moves = {"left": [-1, 0],
+		 "right":[1, 0],
+		 "up":   [0,-1],
+		 "down":  [0,1]}
+
 class BruteForce:
 	def __init__(self, game_h, game_w, x, y):
 		self.game_h = game_h
@@ -12,7 +17,6 @@ class BruteForce:
 		self.generator = self.move()
 		while self.x != x or self.y != y:
 			next(self.generator)
-			print(self.x, self.y)
 		
 
 	def move(self):
@@ -42,7 +46,66 @@ class BruteForce:
 			for i in range(self.game_h-1):
 				self.y -= 1
 				yield "up"
-			
+
+
+
+class BFS:
+	def __init__(self, game_h, game_w, x, y):
+		self.game_h = game_h
+		self.game_w = game_w
+		self.x = x
+		self.y = y
+
+	def find_vertex(self, x, y):
+		q = deque([[x,y]])
+		used = [[False] * self.game_w for _ in range(self.game_h)] # visited vertecies
+		self.p = [[0] * self.game_w for _ in range(self.game_h)]
+		
+		used[x][y] = True
+		self.p[x][y] = [-1,-1,-1]
+		while q:
+			c_x, c_y = q.popleft()
+			for dx, dy, move in [[0,1, "down"],[0,-1, "up"],[1,0, "right"],[-1,0, "left"]]:
+				if (0 <= c_x + dx < self.game_h) and (0 <= c_y + dy < self.game_w):
+					if board[c_x+dx][c_y+dy] == 2: #Found food
+						print(c_x, c_y)
+						#self.x = c_x + dx
+						#self.y = c_y + dy					
+						self.target = [c_x+dx, c_y+dy, move]
+						self.p[c_x+dx][c_y+dy] = [c_x, c_y, move]
+						return
+					if board[c_x+dx][c_y+dy] == 0: #Empty cell
+						if used[c_x+dx][c_y+dy] == False: #And not visited
+							used[c_x+dx][c_y+dy] = True 
+							q.append([c_x+dx, c_y+dy])
+							self.p[c_x+dx][c_y+dy] = [c_x, c_y, move]
+
+
+
+	def find_path(self):
+		self.find_vertex(self.x, self.y)
+		path = []
+
+		x, y, move = self.target
+		while True:
+
+
+			path.append([x,y])
+			prev = self.p[x][y]
+			if prev == [-1,-1,-1]:
+				break
+			elif prev == 0:
+				print("No path")
+				exit()
+			else:
+				x, y, move = prev
+		
+		
+
+		self.x += moves[move][0]
+		self.y += moves[move][1]
+
+		return move, path
 
 
 
@@ -53,7 +116,7 @@ pygame.font.init()
 
 
 HEIGHT, WIDTH = 800, 800 
-SIZE_OF_BLOCK = 50
+SIZE_OF_BLOCK = 100
 
 SNAKE_COLOR = (20, 255, 50)
 FOOD_COLOR = (200, 20, 40)
@@ -91,8 +154,7 @@ def draw_a_block(x, y, type_of_block,color, size):
 
 
 board = [[0] * game_h for _ in range(game_w)]
-for i in board:
-	print(i)
+
 """
 0 - empty block
 1 - snake
@@ -107,7 +169,7 @@ class Snake:
 
 
 	def move_head(self):
-		print(self.body[0])
+		
 		x, y, _ = self.body[0]
 
 		if self.next == "right":
@@ -159,11 +221,14 @@ def spawn_food():
 
 snake = Snake(0, 0)
 food = spawn_food()
+for i in board:
+	print(i)
 
 #### Solution algorithims:
 #1) Brute force
 bf = BruteForce(game_h, game_w, snake.body[0][0], snake.body[0][1])
-
+#2) BFS
+bfs = BFS(game_h, game_w, snake.body[0][0], snake.body[0][1])
 
 
 
@@ -174,7 +239,10 @@ clock = pygame.time.Clock()
 dt = 0
 next_move = "right"
 state = False
+path = []
 while running:
+
+
 
 
 		#Controlling snake manually
@@ -199,15 +267,18 @@ while running:
 	#########
 	#Here we can control snake with algorithms:
 	#1)Brute force:
-	next_move = next(bf.generator)
-	
-	print(bf.x, bf.y)
+	#next_move = next(bf.generator)
+	#2)BFS
+	next_move, path = bfs.find_path()
 
 	
+
+
 
 	#Moving snake
 	snake.next = next_move
 	reward = snake.move_head()
+
 
 	#Rewaring snake
 	if reward == 2:
@@ -217,15 +288,19 @@ while running:
 		print_str("Game Over", 165, 350, 120, WHITE)
 
 		pygame.display.update()
-		pygame.time.wait(30000)
+		pygame.time.wait(3000)
 		running = False
 
-		######## VISUAL PART
+
+	######## VISUAL PART
 	# Drawing stuff:
 	screen.fill((255, 255, 255))
 	for i in range(game_h):
 		for j in range(game_w):
 			draw_a_block(i, j, "empty", (0,0,0), SIZE_OF_BLOCK)
+
+	for block in path[:-1]:
+		draw_a_block(*block, "path", WHITE, SIZE_OF_BLOCK)
 
 	for block in snake.body:
 		draw_a_block(*block, SNAKE_COLOR, SIZE_OF_BLOCK)
@@ -235,8 +310,9 @@ while running:
 
 	pygame.display.update()
 
-	clock.tick(100)
+	dt += clock.tick(3)
 	####################
+
 	
 #Todo
 """
