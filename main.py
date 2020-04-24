@@ -5,9 +5,45 @@ import random
 class BruteForce:
 	def __init__(self, game_h, game_w, x, y):
 		self.game_h = game_h
-		self.game_w = game.w
-		self.x = x
-		self.y = y
+		self.game_w = game_w
+		self.x = 0
+		self.y = 0
+		
+		self.generator = self.move()
+		while self.x != x or self.y != y:
+			next(self.generator)
+			print(self.x, self.y)
+		
+
+	def move(self):
+		while True:
+			self.x += 1
+			yield "right"
+			for i in range(self.game_w//2 - 1):
+
+				for j in range(self.game_h-2):
+					self.y += 1
+					yield "down"
+				self.x += 1
+				yield "right"
+				for j in range(self.game_h-2):
+					self.y -= 1
+					yield "up"
+				print("asfdsf", self.x, self.y)
+				self.x += 1
+				yield "right"
+
+			for i in range(self.game_h-1):
+				self.y += 1
+				yield "down"
+			for i in range(self.game_w-1):
+				self.x -= 1
+				yield "left"
+			for i in range(self.game_h-1):
+				self.y -= 1
+				yield "up"
+			
+
 
 
 
@@ -52,7 +88,11 @@ def draw_a_block(x, y, type_of_block,color, size):
 		pygame.draw.rect(screen, color, [x, y, size - shell*2, size - shell*2])
 
 
+
+
 board = [[0] * game_h for _ in range(game_w)]
+for i in board:
+	print(i)
 """
 0 - empty block
 1 - snake
@@ -117,8 +157,14 @@ def spawn_food():
 
 
 
-snake = Snake(5, 3)
+snake = Snake(0, 0)
 food = spawn_food()
+
+#### Solution algorithims:
+#1) Brute force
+bf = BruteForce(game_h, game_w, snake.body[0][0], snake.body[0][1])
+
+
 
 
 ### GAMELOOP
@@ -127,9 +173,11 @@ score = 0
 clock = pygame.time.Clock()
 dt = 0
 next_move = "right"
+state = False
 while running:
 
-	#Controlling snake manually
+
+		#Controlling snake manually
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
 			running = False
@@ -150,9 +198,10 @@ while running:
 					next_move = "down"
 	#########
 	#Here we can control snake with algorithms:
-
-	#next_move = #...
-
+	#1)Brute force:
+	next_move = next(bf.generator)
+	
+	print(bf.x, bf.y)
 
 	
 
@@ -168,11 +217,16 @@ while running:
 		print_str("Game Over", 165, 350, 120, WHITE)
 
 		pygame.display.update()
-		pygame.time.wait(3000)
+		pygame.time.wait(30000)
 		running = False
 
+		######## VISUAL PART
 	# Drawing stuff:
-	screen.fill((0, 0, 0))
+	screen.fill((255, 255, 255))
+	for i in range(game_h):
+		for j in range(game_w):
+			draw_a_block(i, j, "empty", (0,0,0), SIZE_OF_BLOCK)
+
 	for block in snake.body:
 		draw_a_block(*block, SNAKE_COLOR, SIZE_OF_BLOCK)
 	draw_a_block(*food, "food", FOOD_COLOR, SIZE_OF_BLOCK)
@@ -181,11 +235,12 @@ while running:
 
 	pygame.display.update()
 
-	clock.tick(3)
+	clock.tick(100)
+	####################
 	
 #Todo
 """
 1) Angle parts of snake drawings
-2) Brute force
+2) Brute force - Done
 3) Figure out how to make game more smooth
 """
