@@ -2,10 +2,10 @@ import pygame
 from collections import deque
 import random
 
-moves = {"left": [-1, 0],
+moves = {"left": [-1,0],
 		 "right":[1, 0],
 		 "up":   [0,-1],
-		 "down":  [0,1]}
+		 "down": [0, 1]}
 
 class BruteForce:
 	def __init__(self, game_h, game_w, x, y):
@@ -33,7 +33,7 @@ class BruteForce:
 				for j in range(self.game_h-2):
 					self.y -= 1
 					yield "up"
-				print("asfdsf", self.x, self.y)
+				
 				self.x += 1
 				yield "right"
 
@@ -68,7 +68,7 @@ class BFS:
 			for dx, dy, move in [[0,1, "down"],[0,-1, "up"],[1,0, "right"],[-1,0, "left"]]:
 				if (0 <= c_x + dx < self.game_h) and (0 <= c_y + dy < self.game_w):
 					if board[c_x+dx][c_y+dy] == 2: #Found food
-						print(c_x, c_y)
+						
 						#self.x = c_x + dx
 						#self.y = c_y + dy					
 						self.target = [c_x+dx, c_y+dy, move]
@@ -95,8 +95,7 @@ class BFS:
 			if prev == [-1,-1,-1]:
 				break
 			elif prev == 0:
-				print("No path")
-				exit()
+				return "No path", []
 			else:
 				x, y, move = prev
 		
@@ -116,7 +115,7 @@ pygame.font.init()
 
 
 HEIGHT, WIDTH = 800, 800 
-SIZE_OF_BLOCK = 100
+SIZE_OF_BLOCK = 50
 
 SNAKE_COLOR = (20, 255, 50)
 FOOD_COLOR = (200, 20, 40)
@@ -153,7 +152,7 @@ def draw_a_block(x, y, type_of_block,color, size):
 
 
 
-board = [[0] * game_h for _ in range(game_w)]
+
 
 """
 0 - empty block
@@ -219,99 +218,118 @@ def spawn_food():
 
 
 
-snake = Snake(0, 0)
-food = spawn_food()
-for i in board:
-	print(i)
-
-#### Solution algorithims:
-#1) Brute force
-bf = BruteForce(game_h, game_w, snake.body[0][0], snake.body[0][1])
-#2) BFS
-bfs = BFS(game_h, game_w, snake.body[0][0], snake.body[0][1])
-
-
-
-### GAMELOOP
-running = True
-score = 0
-clock = pygame.time.Clock()
-dt = 0
-next_move = "right"
-state = False
-path = []
-while running:
 
 
 
 
-		#Controlling snake manually
-	for event in pygame.event.get():
-		if event.type == pygame.QUIT:
-			running = False
 
-		#Button pressed
-		if event.type == pygame.KEYDOWN:
-			if event.key == pygame.K_LEFT:
-				if snake.next in ["up", "down"]:
-					next_move = "left"
-			elif event.key == pygame.K_RIGHT:
-				if snake.next in ["up", "down"]:
-					next_move = "right"
-			elif event.key == pygame.K_UP:
-				if snake.next in ["left", "right"]:
-					next_move = "up"
-			elif event.key == pygame.K_DOWN:
-				if snake.next in ["left", "right"]:
-					next_move = "down"
-	#########
-	#Here we can control snake with algorithms:
-	#1)Brute force:
-	#next_move = next(bf.generator)
-	#2)BFS
-	next_move, path = bfs.find_path()
+
+attempt = 0
+while True:
+	attempt += 1
+	board = [[0] * game_h for _ in range(game_w)]
+	for i in board:
+		print(i)
+	snake = Snake(0, 0)
+	food = spawn_food()
+
+	#### Solution algorithims:
+	#1) Brute force
+	bf = BruteForce(game_h, game_w, snake.body[0][0], snake.body[0][1])
+	#2) BFS
+	bfs = BFS(game_h, game_w, snake.body[0][0], snake.body[0][1])
 
 	
+	### GAMELOOP
+	running = True
+	score = 0
+	clock = pygame.time.Clock()
+	next_move = "right"
+	path = []
+	while running:
 
 
 
-	#Moving snake
-	snake.next = next_move
-	reward = snake.move_head()
+
+			#Controlling snake manually
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				running = False
+
+			#Button pressed
+			if event.type == pygame.KEYDOWN:
+				if event.key == pygame.K_LEFT:
+					if snake.next in ["up", "down"]:
+						next_move = "left"
+				elif event.key == pygame.K_RIGHT:
+					if snake.next in ["up", "down"]:
+						next_move = "right"
+				elif event.key == pygame.K_UP:
+					if snake.next in ["left", "right"]:
+						next_move = "up"
+				elif event.key == pygame.K_DOWN:
+					if snake.next in ["left", "right"]:
+						next_move = "down"
+		#########
+		#Here we can control snake with algorithms:
+		#1)Brute force:
+		#next_move = next(bf.generator)
+		#2)BFS
+		next_move, path = bfs.find_path()
+		if next_move == "No path":
+			running = False
+
+		
 
 
-	#Rewaring snake
-	if reward == 2:
-		score += 1
-		food = spawn_food()
-	elif reward == 1:
-		print_str("Game Over", 165, 350, 120, WHITE)
+
+		#Moving snake
+		snake.next = next_move
+		reward = snake.move_head()
+
+
+		#Rewaring snake
+		if reward == 2:
+			score += 1
+			food = spawn_food()
+		elif reward == 1:
+			#print_str("Game Over", 165, 350, 120, WHITE)
+
+			pygame.display.update()
+			pygame.time.wait(1000)
+			running = False
+
+
+		######## VISUAL PART
+		# Drawing stuff:
+		screen.fill((255, 255, 255))
+		for i in range(game_h):
+			for j in range(game_w):
+				draw_a_block(i, j, "empty", (0,0,0), SIZE_OF_BLOCK)
+
+		for block in path[:-1]:
+			draw_a_block(*block, "path", WHITE, SIZE_OF_BLOCK)
+
+		for block in snake.body:
+			draw_a_block(*block, SNAKE_COLOR, SIZE_OF_BLOCK)
+		draw_a_block(*food, "food", FOOD_COLOR, SIZE_OF_BLOCK)
+
+		print_str("score: " + str(score), 0, 0, 50, WHITE)
+		print_str("attempt: " + str(attempt), 0, 55, 50, WHITE)
 
 		pygame.display.update()
-		pygame.time.wait(3000)
-		running = False
+
+		clock.tick(90)
+		####################
 
 
-	######## VISUAL PART
-	# Drawing stuff:
-	screen.fill((255, 255, 255))
-	for i in range(game_h):
-		for j in range(game_w):
-			draw_a_block(i, j, "empty", (0,0,0), SIZE_OF_BLOCK)
 
-	for block in path[:-1]:
-		draw_a_block(*block, "path", WHITE, SIZE_OF_BLOCK)
 
-	for block in snake.body:
-		draw_a_block(*block, SNAKE_COLOR, SIZE_OF_BLOCK)
-	draw_a_block(*food, "food", FOOD_COLOR, SIZE_OF_BLOCK)
 
-	print_str("score: " + str(score), 0, 0, 50, WHITE)
 
-	pygame.display.update()
 
-	dt += clock.tick(3)
-	####################
+
+
 
 	
 #Todo
