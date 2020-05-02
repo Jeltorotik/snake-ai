@@ -69,6 +69,8 @@ class Snake():
 
 
 	def is_valid_move(self, move):
+		if move not in self.moves.keys():
+			return False
 		if move in ["up", "down"] and self.last_move in ["up", "down"]:
 			return False
 		if move in ["left", "right"] and self.last_move in ["left", "right"]:
@@ -131,7 +133,7 @@ class Snake():
 
 
 
-	def draw(self, screen, size):
+	def draw(self, screen, size, attempt):
 		"""
 		Draws board, snake and food
 		"""
@@ -153,5 +155,6 @@ class Snake():
 		draw_a_block(screen, *self.food, "food", FOOD_COLOR, size)
 
 		print_str(screen, "score: " + str(self.score), 0, 0, 50, (255,255,255))
+		print_str(screen, "attempt: " + str(attempt), 0, 55, 50, (255,255,255))
 
 		pygame.display.update()

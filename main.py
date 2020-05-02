@@ -23,62 +23,85 @@ screen = pygame.display.set_mode((HEIGHT, WIDTH))
 
 
 
+def pause():
+	print("PAUSE")
+	paused = True
+	while paused:
+		for event in pygame.event.get():
+			if event.type == pygame.KEYDOWN:
+				if event.key == pygame.K_p:
+					paused = False
+				if event.type == pygame.QUIT:
+					exit()
+
+
+
+def manual_control():
+	global dt
+	for event in pygame.event.get():
+
+		if event.type == pygame.QUIT:
+			exit()
+
+		#Button pressed
+		if event.type == pygame.KEYDOWN:
+			if event.key == pygame.K_LEFT:
+				return "left"
+			elif event.key == pygame.K_RIGHT:
+				return "right"
+			elif event.key == pygame.K_UP:
+				return "up"
+			elif event.key == pygame.K_DOWN:
+				return "down"
+
+			elif event.key == pygame.K_p:
+				pause()
+			elif event.key == pygame.K_LSHIFT:
+				dt = 1
+			elif event.key == pygame.K_LCTRL:
+				dt = -1
+
+		if event.type == pygame.KEYUP:
+			if event.key == pygame.K_LSHIFT:
+				dt = 0
+			if event.key == pygame.K_LCTRL:
+				dt = 0
+
+
+
+
 attempt = 0
+fps = 60
+dt = 0
 while True:
 	attempt += 1
 
 	# Initialization of snake
 	snake = Snake(0, 0, H, W)
-
-
 	# Solution algorithims:
-
 	#1) Brute force
 	bf = BruteForce(H, W, *snake.get_head())
-
 	#2) BFS
 	bfs = BFS()
-
-	
 	# Gameloop
 	running = True
 	clock = pygame.time.Clock()
 	
 	while running:
 
-
-
-
-		#Controlling snake manually
-		#keys =	pygame.key.get_pressed()
-		for event in pygame.event.get():
-			if event.type == pygame.QUIT:
-				exit()
-
-			#Button pressed
-			if event.type == pygame.KEYDOWN:
-				if event.key == pygame.K_LEFT:
-					if snake.is_valid_move("left"):
-						snake.next_move = "left"
-				elif event.key == pygame.K_RIGHT:
-					if snake.is_valid_move("right"):
-						snake.next_move = "right"
-				elif event.key == pygame.K_UP:
-					if snake.is_valid_move("up"):
-						snake.next_move = "up"
-				elif event.key == pygame.K_DOWN:
-					if snake.is_valid_move("down"):
-						snake.next_move = "down"
-
-		#########
 		#Here we can control snake with algorithms:
-		#1)Brute force:
-		#snake.next_move = next(bf.generator)
-		#2)BFS
-		move, path = bfs.find_path(*snake.get_head(), snake.board)
+		#1)Manually:
+		move = manual_control()
+
+		#2)Brute force:
+		#move = next(bf.generator)
+
+		#3)BFS
+		#move, path = bfs.find_path(*snake.get_head(), snake.board)
+
+		#Validation of the move
 		if snake.is_valid_move(move):
 			snake.next_move = move
-		
 
 
 		#Rewaring snake
@@ -90,14 +113,14 @@ while True:
 			pygame.time.wait(1000)
 			running = False
 
-		snake.draw(screen, SIZE_OF_BLOCK)
-
-		print_str(screen, "attempt: " + str(attempt), 0, 55, 50, (255,255,255))
+		snake.draw(screen, SIZE_OF_BLOCK, attempt)
 
 
-		clock.tick(15)
 
-
+		fps += dt
+		fps = max(1, fps)
+		fps = min(100, fps)
+		clock.tick(fps)
 
 
 
@@ -114,6 +137,6 @@ while True:
 - [ ]  Add A* path Finding
 - [+]  Split code into blocks and make it mode readable
 - [ ]  Add Documentation
-- [ ]  Add Ability to change speed and algorithm in-game
+- [+]  Add Ability to change speed and algorithm in-game; set game on pause
 - [ ]  Make beautiful edges of snake
 """
