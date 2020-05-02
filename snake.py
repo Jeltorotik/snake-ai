@@ -133,7 +133,7 @@ class Snake():
 
 
 
-	def draw(self, screen, size, attempt):
+	def draw(self, screen, size):
 		"""
 		Draws board, snake and food
 		"""
@@ -155,6 +155,6 @@ class Snake():
 		draw_a_block(screen, *self.food, "food", FOOD_COLOR, size)
 
 		print_str(screen, "score: " + str(self.score), 0, 0, 50, (255,255,255))
-		print_str(screen, "attempt: " + str(attempt), 0, 55, 50, (255,255,255))
+		#print_str(screen, "attempt: " + str(attempt), 0, 55, 50, (255,255,255))
 
 		pygame.display.update()
