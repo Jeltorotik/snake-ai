@@ -4,6 +4,10 @@ from bruteForce import BruteForce
 from BFS import BFS
 
 
+from utils import get_inputs, get_checkpoint_filename, pause
+import pickle
+
+
 
 pygame.font.init()
 
@@ -70,19 +74,29 @@ def manual_control():
 
 
 
+
 attempt = 0
-fps = 60
+fps = 1
 dt = 0
 while True:
 	attempt += 1
 
 	# Initialization of snake
-	snake = Snake(0, 0, H, W)
+	snake = Snake(H, W)
 	# Solution algorithims:
 	#1) Brute force
-	bf = BruteForce(H, W, *snake.get_head())
+	#bf = BruteForce(H, W, *snake.get_head())
 	#2) BFS
-	bfs = BFS()
+	#bfs = BFS()
+	#3) RL
+
+	with open(f"best_phenotypes/phenotype-{size_of_game}", 'rb') as input:
+		net = pickle.load(input)
+		print('successfully loaded')
+
+	
+
+
 	# Gameloop
 	running = True
 	clock = pygame.time.Clock()
@@ -99,6 +113,13 @@ while True:
 		#3)BFS
 		#move, path = bfs.find_path(*snake.get_head(), snake.board)
 
+		#4) RL
+		inputs = get_inputs(*snake.get_head(), snake.board)
+		output = net.activate(inputs)
+		argmax = output.index(max(output))
+		move = ["left","right","up","down"][argmax]
+
+
 		#Validation of the move
 		if snake.is_valid_move(move):
 			snake.next_move = move
@@ -113,7 +134,7 @@ while True:
 			pygame.time.wait(1000)
 			running = False
 
-		snake.draw(screen, SIZE_OF_BLOCK, attempt)
+		snake.draw(screen, SIZE_OF_BLOCK)
 
 
 
@@ -129,14 +150,19 @@ while True:
 
 
 
+
 	
 #Todo
 """
 - [+]  Fix bfs (when there's no possible path just go the longest available)
-- [ ]  Add RL algorithm
+- [+]  Add RL algorithm
 - [ ]  Add A* path Finding
 - [+]  Split code into blocks and make it mode readable
 - [ ]  Add Documentation
 - [+]  Add Ability to change speed and algorithm in-game; set game on pause
 - [ ]  Make beautiful edges of snake
+- [ ]  Random Spawn postion of snake, and direction
+- [ ]  Make training file for NEAT. Organize checkpoints
+- [ ]  !!! Organize GUI. Make add ability ot user to choose solution algorithm.
+- [ ]  Configure and improve StdOutReporter
 """

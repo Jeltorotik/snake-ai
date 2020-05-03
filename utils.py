@@ -1,23 +1,5 @@
-board =[
-	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-	[0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-	[0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-	[0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-	[0, 0, 0, 0, 0, 0, 1, 1, 0, 2, 0, 0, 0, 0, 0, 0],
-	[0, 0, 0, 0, 0, 1, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-	[0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-	[0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-	[0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0]
-]
-
-x, y = 12, 6
+import os
+import pygame
 
 
 def get_inputs(x, y, board):
@@ -63,4 +45,42 @@ def get_inputs(x, y, board):
 		result += triple[:]
 
 	return result
+
+
+
+def get_checkpoint_filename(size_of_game):
+	"""
+	Takes integer size_of_game
+	returns filenamethe best available checkpoint for this size
+	"""
+
+	path = "neat-checkpoints"
+	filenames = os.listdir(path)
+
+	filenames = [name.split("-") for name in filenames]
+
+	check_size = lambda x: x[2] == str(size_of_game) 
+	filenames = list(filter(check_size, filenames))
+
+
+	filenames = [int(name[3]) for name in filenames]
+
+	name = str(max(filenames))
+	name = "neat-checkpoint-" + str(size_of_game) + "-" + name
+
+	return path + "/" + name
+
+
+
+
+def pause():
+	print("PAUSE")
+	paused = True
+	while paused:
+		for event in pygame.event.get():
+			if event.type == pygame.KEYDOWN:
+				if event.key == pygame.K_p:
+					paused = False
+				if event.type == pygame.QUIT:
+					exit()
 
