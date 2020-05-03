@@ -1,6 +1,5 @@
 from snake import *
-
-from gui import choose_size, choose_control, pause
+from gui import *
 
 from bruteForce import BruteForce
 from BFS import BFS
@@ -18,7 +17,6 @@ def manual_control():
 		#Button pressed
 		if event.type == pygame.KEYDOWN:
 			if event.key == pygame.K_LEFT:
-				print("hey")
 				return "left"
 			elif event.key == pygame.K_RIGHT:
 				return "right"
@@ -29,6 +27,11 @@ def manual_control():
 
 			elif event.key == pygame.K_p:
 				pause(screen)
+			elif event.key == pygame.K_r:
+				return "restart"
+			elif event.key == pygame.K_i:
+				display_info(screen)
+
 			elif event.key == pygame.K_LSHIFT:
 				dt = 1
 			elif event.key == pygame.K_LCTRL:
@@ -39,6 +42,7 @@ def manual_control():
 				dt = 0
 			if event.key == pygame.K_LCTRL:
 				dt = 0
+
 
 
 def main(screen, speed, control):
@@ -68,6 +72,8 @@ def main(screen, speed, control):
 
 		#Here we can control snake
 		move = manual_control()
+		if move == "restart":
+			break
 		if control == "Manual":
 			#1)Manually:
 			pass
@@ -117,8 +123,16 @@ def main(screen, speed, control):
 #Basic initialization
 pygame.init()
 pygame.font.init()
+
 HEIGHT, WIDTH = 800, 800 
+pygame.display.set_caption('snake-ai')
+
 screen = pygame.display.set_mode((HEIGHT, WIDTH))
+
+
+
+display_intro(screen)
+display_info(screen)
 
 
 while True:
@@ -127,7 +141,11 @@ while True:
 	H = size_of_game
 	W = size_of_game
 	control = choose_control(screen)
-	main(screen, speed=20, control = control)
+	if control == "Manual":
+		speed = 2
+	else:
+		speed = 30
+	main(screen, speed=speed, control = control)
 	
 
 
@@ -158,4 +176,5 @@ while True:
 - [ ]  !!! Organize GUI. Make add ability ot user to choose solution algorithm.
 - [ ]  Configure and improve StdOutReporter
 - [ ]  Add hybrid: when bfs can't find path - turn on Neural network
+- [ ]  Draw path for bfs 
 """

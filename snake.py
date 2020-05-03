@@ -25,11 +25,11 @@ def draw_a_block(screen, x, y, type_of_block, color, size):
 
 
 
-def show_text(screen,string, x, y, font_size, color):
+def show_text(screen,text, x, y, font_size, color):
 	myfont1 = pygame.font.SysFont('Comic Sans MS', font_size)
 	myfont2 = pygame.font.SysFont('Comic Sans MS', font_size+2)
-	textsurface1 = myfont1.render(string, False, color)
-	textsurface2 = myfont2.render(string, False, (0,0,0))
+	textsurface1 = myfont1.render(text, False, color)
+	textsurface2 = myfont2.render(text, False, (0,0,0))
 	
 	screen.blit(textsurface2,(x+1,y+1))
 	screen.blit(textsurface1,(x,y))
