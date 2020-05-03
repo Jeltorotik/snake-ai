@@ -6,7 +6,8 @@ from BFS import BFS
 import os
 import neat
 
-from utils import get_inputs
+from utils import get_inputs, get_checkpoint_filename, pause
+import pickle
 
 
 pygame.font.init()
@@ -16,7 +17,7 @@ pygame.font.init()
 
 HEIGHT, WIDTH = 800, 800 
 #(each block is 50x50 px)
-size_of_game = 8#int(input("Input size of the game(8x8, 16x16, 32x32, 80x80)\n:"))
+size_of_game = 16#int(input("Input size of the game(8x8, 16x16, 32x32, 80x80)\n:"))
 
 SIZE_OF_BLOCK = HEIGHT // size_of_game  #TODO
 H = size_of_game
@@ -27,16 +28,7 @@ screen = pygame.display.set_mode((HEIGHT, WIDTH))
 
 
 
-def pause():
-	print("PAUSE")
-	paused = True
-	while paused:
-		for event in pygame.event.get():
-			if event.type == pygame.KEYDOWN:
-				if event.key == pygame.K_p:
-					paused = False
-				if event.type == pygame.QUIT:
-					exit()
+
 
 
 
@@ -49,16 +41,7 @@ def manual_control():
 
 		#Button pressed
 		if event.type == pygame.KEYDOWN:
-			if event.key == pygame.K_LEFT:
-				return "left"
-			elif event.key == pygame.K_RIGHT:
-				return "right"
-			elif event.key == pygame.K_UP:
-				return "up"
-			elif event.key == pygame.K_DOWN:
-				return "down"
-
-			elif event.key == pygame.K_p:
+			if event.key == pygame.K_p:
 				pause()
 			elif event.key == pygame.K_LSHIFT:
 				dt = 1
@@ -73,29 +56,22 @@ def manual_control():
 
 
 
+dt = 0
+fps = 30
 
 
 def main(genomes, config):
 
-	global dt
-	dt = 0
-	fps = 30
+	global dt, fps
 
-	# Initialization of snake
-	
-	# Solution algorithims:
-	#1) Brute force
-	#bf = BruteForce(H, W, *snake.get_head())
-	#2) BFS
-	#bfs = BFS()
-	#3) NEAT RL:
+	#NEAT RL:
 	snakes = []
 	ge = []
 	nets = []
 	for _, g in genomes:
 		net = neat.nn.FeedForwardNetwork.create(g, config)
 		nets.append(net)
-		snakes.append(Snake(0, 0, H, W))
+		snakes.append(Snake(H, W))
 		g.fitness = 0
 		ge.append(g)
 
@@ -103,17 +79,11 @@ def main(genomes, config):
 	clock = pygame.time.Clock()
 	while True:
 
-		#Here we can control snake with algorithms:
-		#1)Manually:
-		#move = manual_control()
+		#For pausing, speeding up and down
+		manual_control()
 
-		#2)Brute force:
-		#move = next(bf.generator)
 
-		#3)BFS
-		#move, path = bfs.find_path(*snake.get_head(), snake.board)
-
-		#4)LR
+		#Training NEAT
 		rewards = []
 		for x, snake in enumerate(snakes):
 			inputs = get_inputs(*snake.get_head(), snake.board)
@@ -127,8 +97,8 @@ def main(genomes, config):
 			rewards.append(snake.move())
 
 		for x, reward in enumerate(rewards):
-			if reward == "Game over":
-				ge[x].fitness -= 1
+			if reward == "Game over" or ge[x].fitness < -1:
+				ge[x].fitness -= 10
 				rewards.pop(x)
 				snakes.pop(x)
 				nets.pop(x)
@@ -138,62 +108,62 @@ def main(genomes, config):
 			else:
 				ge[x].fitness -= 0.01
 
+
 		if len(snakes) == 0:
 			break
+		
 
 		snakes[0].draw(screen, SIZE_OF_BLOCK)
-		clock.tick(fps)
-		
-		"""
-		#Validation of the move
-		 if snake.is_valid_move(move):
-		 	snake.next_move = move
-
-		#Rewaring snake
-		reward = snake.move()
-
-		if reward == "Game over":
-
-			g.fitness -= 1
-			break
-		
-			print_str(screen, "Game Over", 165, 350, 120, (255,255,255))
-			pygame.display.update()
-			pygame.time.wait(1000)
-			running = False
-			
-		if reward == "Food":
-			g.fitness += 1
-
-		snake.draw(screen, SIZE_OF_BLOCK)
-
 		fps += dt
-		fps = max(1, fps)
-		fps = min(100, fps)
 		clock.tick(fps)
-		"""
-
-#main()
+		
 
 
 
-def run(config_file):
+
+
+def train(config_file):
 	"""
-	runs the NEAT algorithm to train a neural network to play flappy bird.
+	runs the NEAT algorithm to train a neural network to play snake.
 	:param config_file: location of config file
 	:return: None
 	"""
+	
+	# Load configuration.
 	config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
 								neat.DefaultSpeciesSet, neat.DefaultStagnation,
 								config_file)
 
-	p = neat.Population(config)
+	# Create the population, which is the top-level object for a NEAT run.
+
+	restart = "n"#input("Restart? [Y/n]:\n")
+	if restart == "Y":
+		print("Restarting...")
+		p = neat.Population(config)
+	else:
+		try:
+			filename = get_checkpoint_filename(size_of_game)
+			p = neat.Checkpointer.restore_checkpoint(filename)
+			print(f"Restored {filename}")
+		except:
+			p = neat.Population(config)
+
 
 	p.add_reporter(neat.StdOutReporter(True))
-	stats = neat.StatisticsReporter()
-	p.add_reporter(stats)
+	p.add_reporter(neat.StatisticsReporter())
 
-	winner = p.run(main, 2000)
+	#Saves checkpoint with interval of 100 generations
+	filename_prefix = 'neat-checkpoints/neat-checkpoint-' + str(size_of_game) + "-"
+	p.add_reporter(neat.Checkpointer(1, filename_prefix=filename_prefix))
+
+
+	#Run for 2000 generations
+	winner = p.run(main, 1)
+
+	winner_net = neat.nn.FeedForwardNetwork.create(winner, config)
+	
+	with open(f"best_phenotypes/phenotype-{size_of_game}", 'wb') as output:
+		pickle.dump(winner_net, output, pickle.HIGHEST_PROTOCOL)
 
 
 
@@ -203,19 +173,9 @@ if __name__ == '__main__':
 	# current working directory.
 	local_dir = os.path.dirname(__file__)
 	config_path = os.path.join(local_dir, 'config-feedforward.txt')
-	run(config_path)
+	train(config_path)
 
 
 
 
 	
-#Todo
-"""
-- [+]  Fix bfs (when there's no possible path just go the longest available)
-- [+]  Add RL algorithm
-- [ ]  Add A* path Finding
-- [+]  Split code into blocks and make it mode readable
-- [ ]  Add Documentation
-- [+]  Add Ability to change speed and algorithm in-game; set game on pause
-- [ ]  Make beautiful edges of snake
-"""

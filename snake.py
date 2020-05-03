@@ -34,7 +34,7 @@ def print_str(screen,string, x, y, font_size, color):
 
 class Snake():
 
-	def __init__(self, x, y, h, w):
+	def __init__(self, h, w):
 		"""
 		x, y - initial position of a snake 
 		h, w - height and width of the board
@@ -49,6 +49,7 @@ class Snake():
 
 		self.h = h
 		self.w = w
+		x, y = random.randint(0, self.h-1), random.randint(0, self.w-1)
 		self.body = deque([[x, y, "standing"]])
 
 		self.last_move = "right"
