@@ -72,15 +72,3 @@ def get_checkpoint_filename(size_of_game):
 
 
 
-
-def pause():
-	print("PAUSE")
-	paused = True
-	while paused:
-		for event in pygame.event.get():
-			if event.type == pygame.KEYDOWN:
-				if event.key == pygame.K_p:
-					paused = False
-				if event.type == pygame.QUIT:
-					exit()
-
