@@ -1,42 +1,10 @@
 from snake import *
 
+from gui import choose_size, choose_control, pause
+
 from bruteForce import BruteForce
 from BFS import BFS
-
-
-from utils import get_inputs, get_checkpoint_filename, pause
-import pickle
-
-
-
-pygame.font.init()
-
-
-
-
-HEIGHT, WIDTH = 800, 800 
-#(each block is 50x50 px)
-size_of_game = int(input("Input size of the game(8x8, 16x16, 32x32, 80x80)\n:"))
-
-SIZE_OF_BLOCK = HEIGHT // size_of_game  #TODO
-H = size_of_game
-W = size_of_game
-
-screen = pygame.display.set_mode((HEIGHT, WIDTH))
-
-
-
-
-def pause():
-	print("PAUSE")
-	paused = True
-	while paused:
-		for event in pygame.event.get():
-			if event.type == pygame.KEYDOWN:
-				if event.key == pygame.K_p:
-					paused = False
-				if event.type == pygame.QUIT:
-					exit()
+from NN import NN
 
 
 
@@ -50,6 +18,7 @@ def manual_control():
 		#Button pressed
 		if event.type == pygame.KEYDOWN:
 			if event.key == pygame.K_LEFT:
+				print("hey")
 				return "left"
 			elif event.key == pygame.K_RIGHT:
 				return "right"
@@ -59,7 +28,7 @@ def manual_control():
 				return "down"
 
 			elif event.key == pygame.K_p:
-				pause()
+				pause(screen)
 			elif event.key == pygame.K_LSHIFT:
 				dt = 1
 			elif event.key == pygame.K_LCTRL:
@@ -72,76 +41,99 @@ def manual_control():
 				dt = 0
 
 
-
-
-
-attempt = 0
-fps = 1
-dt = 0
-while True:
-	attempt += 1
+def main(screen, speed, control):
+	
+	global dt
+	dt = 0
 
 	# Initialization of snake
 	snake = Snake(H, W)
+
 	# Solution algorithims:
 	#1) Brute force
-	#bf = BruteForce(H, W, *snake.get_head())
+	bf = BruteForce(H, W, *snake.get_head())
 	#2) BFS
-	#bfs = BFS()
+	bfs = BFS()
 	#3) RL
-
-	with open(f"best_phenotypes/phenotype-{size_of_game}", 'rb') as input:
-		net = pickle.load(input)
-		print('successfully loaded')
-
-	
-
+	try:
+		net = NN(size_of_game)
+	except:
+		pass # TODO
 
 	# Gameloop
-	running = True
 	clock = pygame.time.Clock()
 	
-	while running:
+	while True:
 
-		#Here we can control snake with algorithms:
-		#1)Manually:
+
+		#Here we can control snake
 		move = manual_control()
+		if control == "Manual":
+			#1)Manually:
+			pass
+		if control == "Brute Force":
+			#2)Brute force:
 
-		#2)Brute force:
-		#move = next(bf.generator)
+			move = next(bf.generator)
+		elif control == "BFS":
+			#3)BFS
+			move, path = bfs.find_path(*snake.get_head(), snake.board)
+		elif control == "Neural Network":
+			#4) NN
+			try:
+				move = net.get_move(*snake.get_head(), snake.board)
+			except:
+				pass
 
-		#3)BFS
-		#move, path = bfs.find_path(*snake.get_head(), snake.board)
 
-		#4) RL
-		inputs = get_inputs(*snake.get_head(), snake.board)
-		output = net.activate(inputs)
-		argmax = output.index(max(output))
-		move = ["left","right","up","down"][argmax]
 
 
 		#Validation of the move
 		if snake.is_valid_move(move):
 			snake.next_move = move
 
-
 		#Rewaring snake
 		reward = snake.move()
-
 		if reward == "Game over":
-			print_str(screen, "Game Over", 165, 350, 120, (255,255,255))
+			show_text(screen, "Game Over", 165, 350, 120, (255,255,255))
 			pygame.display.update()
 			pygame.time.wait(1000)
-			running = False
+			break
+
 
 		snake.draw(screen, SIZE_OF_BLOCK)
+		show_text(screen, "speed: " + str(speed), 0, 25, 50, (255,255,255))
+
+		speed += dt
+		speed = max(1, speed)
+		speed = min(100, speed)
+
+		clock.tick(speed)
+
+		pygame.display.update()
 
 
 
-		fps += dt
-		fps = max(1, fps)
-		fps = min(100, fps)
-		clock.tick(fps)
+#Basic initialization
+pygame.init()
+pygame.font.init()
+HEIGHT, WIDTH = 800, 800 
+screen = pygame.display.set_mode((HEIGHT, WIDTH))
+
+
+while True:
+	size_of_game = choose_size(screen)
+	SIZE_OF_BLOCK = HEIGHT // size_of_game  
+	H = size_of_game
+	W = size_of_game
+	control = choose_control(screen)
+	main(screen, speed=20, control = control)
+	
+
+
+
+
+
 
 
 
@@ -162,7 +154,8 @@ while True:
 - [+]  Add Ability to change speed and algorithm in-game; set game on pause
 - [ ]  Make beautiful edges of snake
 - [ ]  Random Spawn postion of snake, and direction
-- [ ]  Make training file for NEAT. Organize checkpoints
+- [+]  Make training file for NEAT. Organize checkpoints
 - [ ]  !!! Organize GUI. Make add ability ot user to choose solution algorithm.
 - [ ]  Configure and improve StdOutReporter
+- [ ]  Add hybrid: when bfs can't find path - turn on Neural network
 """

@@ -25,10 +25,14 @@ def draw_a_block(screen, x, y, type_of_block, color, size):
 
 
 
-def print_str(screen,string, x, y, font_size, color):
-	myfont = pygame.font.SysFont('Comic Sans MS', font_size)
-	textsurface = myfont.render(string, False, color)
-	screen.blit(textsurface,(x,y))
+def show_text(screen,string, x, y, font_size, color):
+	myfont1 = pygame.font.SysFont('Comic Sans MS', font_size)
+	myfont2 = pygame.font.SysFont('Comic Sans MS', font_size+2)
+	textsurface1 = myfont1.render(string, False, color)
+	textsurface2 = myfont2.render(string, False, (0,0,0))
+	
+	screen.blit(textsurface2,(x+1,y+1))
+	screen.blit(textsurface1,(x,y))
 
 
 
@@ -44,7 +48,6 @@ class Snake():
 		1 - snake block
 		2 - food block
 		"""
-		pygame.init()
 		self.score = 0
 
 		self.h = h
@@ -155,7 +158,6 @@ class Snake():
 
 		draw_a_block(screen, *self.food, "food", FOOD_COLOR, size)
 
-		print_str(screen, "score: " + str(self.score), 0, 0, 50, (255,255,255))
-		#print_str(screen, "attempt: " + str(attempt), 0, 55, 50, (255,255,255))
+		show_text(screen, "score: " + str(self.score), 0, 0, 50, (255,255,255))
 
-		pygame.display.update()
+		
