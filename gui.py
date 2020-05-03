@@ -61,7 +61,11 @@ def choose_size(screen):
 
 def choose_control(screen):
 	h, w = 400, 125
+<<<<<<< HEAD
 	btns = [Button("Arrow Keys","Manual",              200, 150, h, w, (0,0,0),(255, 255, 255)), 
+=======
+	btns = [Button("Manual","Manual",                  200, 150, h, w, (0,0,0),(255, 255, 255)), 
+>>>>>>> b532d065b97acebe7664c4e288d754cc043e7727
 			Button("Brute Force","Brute Force",        200, 300, h, w, (0,0,0),(255, 255, 255)), 
 			Button("BFS", "BFS",                       200, 450, h, w, (0,0,0),(255, 255, 255)),
 			Button("Neural Network", "Neural Network", 200, 600, h, w, (0,0,0),(255, 255, 255))]
@@ -77,6 +81,7 @@ def pause(screen):
 			if event.type == pygame.QUIT:
 				exit()
 			if event.type == pygame.KEYDOWN:
+<<<<<<< HEAD
 				paused = False
 
 
@@ -102,3 +107,8 @@ def display_info(screen):
 	screen.blit(INFO, (0, 0))
 	pygame.display.update()
 	pause(screen)
+=======
+				print
+				if event.key == pygame.K_p:
+					paused = False
+>>>>>>> b532d065b97acebe7664c4e288d754cc043e7727
